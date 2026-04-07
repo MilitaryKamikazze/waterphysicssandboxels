@@ -1,3 +1,21 @@
+// ==========================
+// 🔓 AUDIO UNLOCK (REQUIRED)
+// ==========================
+
+let audioUnlocked = false;
+
+document.addEventListener("click", function unlockAudio() {
+    if (audioUnlocked) return;
+
+    let a = new Audio();
+    a.play().catch(()=>{});
+
+    audioUnlocked = true;
+    console.log("🔊 Audio unlocked");
+
+    document.removeEventListener("click", unlockAudio);
+});
+
 // ---- CONFIG ----
 const SOUND_ENABLED = true;
 const MASTER_VOLUME = 0.6;
