@@ -76,11 +76,11 @@ runEveryTick(function() {
         if (!pixel) continue;
 
         if (pixel.temp > 250 && chance(0.01)) {
-            SoundEngine.play("https://files.catbox.moe/xqlp2x.ogg", 0.3, 10);
+            SoundEngine.play("https://github.com/MilitaryKamikazze/waterphysicssandboxels/raw/refs/heads/main/fire.ogg", 0.3, 10);
         }
 
         if (pixel.temp > 900 && chance(0.02)) {
-            SoundEngine.play("https://files.catbox.moe/xqlp2x.ogg", 0.6, 8);
+            SoundEngine.play("https://github.com/MilitaryKamikazze/waterphysicssandboxels/raw/refs/heads/main/fire.ogg", 0.6, 8);
         }
     }
 });
@@ -124,7 +124,7 @@ elements.water.onChange = function(pixel, change) {
     if (oldWaterState) oldWaterState(pixel, change);
 
     if (change === "steam") {
-        SoundEngine.play("https://files.catbox.moe/td0rtt.mp3", 0.4, 10);
+        SoundEngine.play("https://github.com/MilitaryKamikazze/waterphysicssandboxels/raw/refs/heads/main/boil.mp3", 0.4, 10);
     }
 };
 
@@ -140,7 +140,7 @@ runEveryTick(function() {
         if (!pixel) continue;
 
         if (pixel.element === "explosion" && chance(0.2)) {
-            SoundEngine.play("https://files.catbox.moe/tz971a.wav", 0.8, 3);
+            SoundEngine.play("https://github.com/MilitaryKamikazze/waterphysicssandboxels/raw/refs/heads/main/explosion.wav", 0.8, 3);
         }
     }
 });
