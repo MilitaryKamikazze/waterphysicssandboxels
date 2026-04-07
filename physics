@@ -1,5 +1,6 @@
-// store original just in case
-let oldWaterTick = elements.water.tick;
+// ==========================
+// 🌊 REALISTIC WATER + PRESSURE JETS
+// ==========================
 
 elements.water.tick = function(pixel) {
 
@@ -8,54 +9,99 @@ elements.water.tick = function(pixel) {
     if (pixel.vy === undefined) pixel.vy = 0;
 
     // ---- GRAVITY ----
-    pixel.vy += 0.15; // acceleration
-
-    // clamp velocity
+    pixel.vy += 0.15;
     if (pixel.vy > 3) pixel.vy = 3;
 
-    // ---- DOWNWARD MOVEMENT ----
+    // ==========================
+    // 🧠 PRESSURE CALCULATION
+    // ==========================
+
+    let depth = 0;
+
+    // count how much water is above (pressure)
+    for (let i = 1; i < 15; i++) {
+        let above = getPixel(pixel.x, pixel.y - i);
+        if (above && above.element === "water") {
+            depth++;
+        } else break;
+    }
+
+    // ==========================
+    // 💨 PRESSURE JET LOGIC
+    // ==========================
+
+    // detect small openings (sides or bottom)
+    let leftEmpty  = isEmpty(pixel.x - 1, pixel.y);
+    let rightEmpty = isEmpty(pixel.x + 1, pixel.y);
+    let downEmpty  = isEmpty(pixel.x, pixel.y + 1);
+
+    let confined =
+        (!leftEmpty && !rightEmpty) || // tight vertical column
+        (!downEmpty && (leftEmpty || rightEmpty)); // side hole
+
+    if (depth > 3 && confined) {
+        let pressureForce = depth * 0.05;
+
+        // sideways jets (hole in wall)
+        if (leftEmpty && Math.random() < 0.5) {
+            pixel.vx -= pressureForce;
+        }
+        if (rightEmpty && Math.random() < 0.5) {
+            pixel.vx += pressureForce;
+        }
+
+        // downward jet (hole below)
+        if (downEmpty) {
+            pixel.vy += pressureForce * 1.5;
+        }
+    }
+
+    // clamp horizontal speed
+    if (pixel.vx > 2) pixel.vx = 2;
+    if (pixel.vx < -2) pixel.vx = -2;
+
+    // ==========================
+    // ⬇️ MOVEMENT
+    // ==========================
+
+    // vertical move first
     if (tryMove(pixel, pixel.x, pixel.y + Math.floor(pixel.vy))) {
+        pixel.vx *= 0.9;
         return;
     }
 
-    // ---- PRESSURE SYSTEM ----
-    // try to move into less "crowded" areas
-
+    // diagonal flow
     let dirs = [
         [-1, 1],
-        [1, 1],
-        [-1, 0],
-        [1, 0]
+        [1, 1]
     ];
 
-    // shuffle directions for natural randomness
-    for (let i = dirs.length - 1; i > 0; i--) {
-        let j = Math.floor(Math.random() * (i + 1));
-        [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
-    }
+    if (Math.random() < 0.5) dirs.reverse();
 
     for (let i = 0; i < dirs.length; i++) {
-        let dx = dirs[i][0];
-        let dy = dirs[i][1];
-
-        if (tryMove(pixel, pixel.x + dx, pixel.y + dy)) {
+        if (tryMove(pixel, pixel.x + dirs[i][0], pixel.y + dirs[i][1])) {
+            pixel.vx *= 0.8;
             return;
         }
     }
 
-    // ---- SIDE FLOW (LEVELING) ----
-    // makes water surfaces flatten out
-
-    let left = getPixel(pixel.x - 1, pixel.y);
-    let right = getPixel(pixel.x + 1, pixel.y);
-
-    if (left && left.element === "water" && Math.random() < 0.3) {
-        tryMove(pixel, pixel.x - 1, pixel.y);
-    }
-    else if (right && right.element === "water" && Math.random() < 0.3) {
-        tryMove(pixel, pixel.x + 1, pixel.y);
+    // horizontal pressure flow
+    if (Math.abs(pixel.vx) > 0.1) {
+        let dir = Math.sign(pixel.vx);
+        if (tryMove(pixel, pixel.x + dir, pixel.y)) {
+            pixel.vx *= 0.7;
+            return;
+        }
     }
 
-    // ---- DAMPING ----
+    // leveling
+    if (Math.random() < 0.3) {
+        if (tryMove(pixel, pixel.x + (Math.random() < 0.5 ? -1 : 1), pixel.y)) {
+            return;
+        }
+    }
+
+    // damping
     pixel.vy *= 0.5;
+    pixel.vx *= 0.5;
 };
