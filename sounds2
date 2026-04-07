@@ -47,25 +47,6 @@ function touching(pixel, elementName) {
 }
 
 // ==========================
-// 💧 WATER SPLASH DETECTION
-// ==========================
-
-let oldWaterTick = elements.water.tick;
-
-elements.water.tick = function(pixel) {
-    if (oldWaterTick) oldWaterTick(pixel);
-
-    if (pixel.lastY === undefined) pixel.lastY = pixel.y;
-
-    let velocity = pixel.y - pixel.lastY;
-    pixel.lastY = pixel.y;
-
-    if (velocity > 1.5 && touching(pixel, "water") && chance(0.08)) {
-        SoundEngine.play("mods/sounds/splash.ogg", 0.5, 3);
-    }
-};
-
-// ==========================
 // 🔥 GENERIC FIRE SOUND
 // ==========================
 
@@ -77,11 +58,11 @@ runEveryTick(function() {
         if (!pixel) continue;
 
         if (pixel.temp > 250 && chance(0.01)) {
-            SoundEngine.play("mods/sounds/fire.ogg", 0.3, 10);
+            SoundEngine.play("https://files.catbox.moe/xqlp2x.ogg", 0.3, 10);
         }
 
         if (pixel.temp > 900 && chance(0.02)) {
-            SoundEngine.play("mods/sounds/intense_fire.ogg", 0.6, 8);
+            SoundEngine.play("https://files.catbox.moe/xqlp2x.ogg", 0.6, 8);
         }
     }
 });
@@ -111,9 +92,9 @@ function addBurnSound(elem, sound, tempThreshold, volume=0.7) {
     };
 }
 
-addBurnSound("sodium", "mods/sounds/sodium.ogg", 200);
-addBurnSound("potassium", "mods/sounds/potassium.ogg", 200);
-addBurnSound("magnesium", "mods/sounds/magnesium.ogg", 800);
+addBurnSound("sodium", "https://files.catbox.moe/xqlp2x.ogg", 200);
+addBurnSound("potassium", "https://files.catbox.moe/xqlp2x.ogg", 200);
+addBurnSound("magnesium", "https://files.catbox.moe/xqlp2x.ogg", 800);
 
 // ==========================
 // ♨️ BOILING / STEAM
@@ -125,7 +106,7 @@ elements.water.onChange = function(pixel, change) {
     if (oldWaterState) oldWaterState(pixel, change);
 
     if (change === "steam") {
-        SoundEngine.play("mods/sounds/boil.ogg", 0.4, 10);
+        SoundEngine.play("https://files.catbox.moe/td0rtt.mp3", 0.4, 10);
     }
 };
 
@@ -141,7 +122,7 @@ runEveryTick(function() {
         if (!pixel) continue;
 
         if (pixel.element === "explosion" && chance(0.2)) {
-            SoundEngine.play("mods/sounds/explosion.ogg", 0.8, 3);
+            SoundEngine.play("https://files.catbox.moe/tz971a.wav", 0.8, 3);
         }
     }
 });
