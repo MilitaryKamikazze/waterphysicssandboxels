@@ -1,0 +1,40 @@
+// how strong gravity ramps up
+const FALL_ACCEL = 0.12;
+const MAX_FALL_SPEED = 6;
+
+// run on ALL pixels
+runPerPixel(function(pixel) {
+
+    // skip gases
+    if (elements[pixel.element].state === "gas") return;
+
+    // init properties
+    if (pixel.fallTime === undefined) pixel.fallTime = 0;
+    if (pixel.vy === undefined) pixel.vy = 0;
+
+    let below = getPixel(pixel.x, pixel.y + 1);
+
+    // if falling (air below)
+    if (!below) {
+        pixel.fallTime++;
+
+        // accelerate based on airtime
+        pixel.vy += FALL_ACCEL + (pixel.fallTime * 0.01);
+
+        if (pixel.vy > MAX_FALL_SPEED) {
+            pixel.vy = MAX_FALL_SPEED;
+        }
+
+        // attempt movement
+        let moveSteps = Math.floor(pixel.vy);
+
+        for (let i = 0; i < moveSteps; i++) {
+            if (!tryMove(pixel, pixel.x, pixel.y + 1)) break;
+        }
+    }
+    else {
+        // landed → reset
+        pixel.fallTime = 0;
+        pixel.vy = 0;
+    }
+});
