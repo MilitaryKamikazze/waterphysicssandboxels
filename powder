@@ -1,0 +1,52 @@
+runEveryTick(function() {
+    if (pixelTicks % 2 !== 0) return;
+
+    for (let i = 0; i < currentPixels.length; i += 2) {
+        let p = currentPixels[i];
+        if (!p) continue;
+
+        let el = elements[p.element];
+        if (!el || el.state !== "solid") continue;
+
+        // initialize
+        if (p.vx === undefined) p.vx = 0;
+        if (p.vy === undefined) p.vy = 0;
+        if (p.fallTime === undefined) p.fallTime = 0;
+
+        // check below
+        let below = getPixel(p.x, p.y + 1);
+
+        if (!below) {
+            // free fall
+            p.fallTime++;
+            p.vy += 0.15 + p.fallTime * 0.01;  // faster fall with airtime
+            if (p.vy > 6) p.vy = 6;
+
+            // horizontal drift for tumbling solids
+            p.vx += (Math.random() - 0.5) * 0.05;
+
+            // try vertical move
+            for (let step = 0; step < Math.floor(p.vy); step++) {
+                if (!tryMove(p, p.x, p.y + 1)) {
+                    p.vy = 0;
+                    break;
+                }
+            }
+        } else {
+            // landed
+            p.fallTime = 0;
+            p.vy = 0;
+
+            // small slide along walls
+            let slide = Math.random() < 0.5 ? -1 : 1;
+            tryMove(p, p.x + slide, p.y);
+            p.vx *= 0.7;
+        }
+
+        // damping horizontal velocity
+        if (Math.abs(p.vx) > 0.1) {
+            tryMove(p, p.x + Math.sign(p.vx), p.y);
+            p.vx *= 0.8;
+        }
+    }
+});
