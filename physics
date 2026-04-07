@@ -1,0 +1,61 @@
+// store original just in case
+let oldWaterTick = elements.water.tick;
+
+elements.water.tick = function(pixel) {
+
+    // ---- INIT ----
+    if (pixel.vx === undefined) pixel.vx = 0;
+    if (pixel.vy === undefined) pixel.vy = 0;
+
+    // ---- GRAVITY ----
+    pixel.vy += 0.15; // acceleration
+
+    // clamp velocity
+    if (pixel.vy > 3) pixel.vy = 3;
+
+    // ---- DOWNWARD MOVEMENT ----
+    if (tryMove(pixel, pixel.x, pixel.y + Math.floor(pixel.vy))) {
+        return;
+    }
+
+    // ---- PRESSURE SYSTEM ----
+    // try to move into less "crowded" areas
+
+    let dirs = [
+        [-1, 1],
+        [1, 1],
+        [-1, 0],
+        [1, 0]
+    ];
+
+    // shuffle directions for natural randomness
+    for (let i = dirs.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+    }
+
+    for (let i = 0; i < dirs.length; i++) {
+        let dx = dirs[i][0];
+        let dy = dirs[i][1];
+
+        if (tryMove(pixel, pixel.x + dx, pixel.y + dy)) {
+            return;
+        }
+    }
+
+    // ---- SIDE FLOW (LEVELING) ----
+    // makes water surfaces flatten out
+
+    let left = getPixel(pixel.x - 1, pixel.y);
+    let right = getPixel(pixel.x + 1, pixel.y);
+
+    if (left && left.element === "water" && Math.random() < 0.3) {
+        tryMove(pixel, pixel.x - 1, pixel.y);
+    }
+    else if (right && right.element === "water" && Math.random() < 0.3) {
+        tryMove(pixel, pixel.x + 1, pixel.y);
+    }
+
+    // ---- DAMPING ----
+    pixel.vy *= 0.5;
+};
