@@ -1,0 +1,147 @@
+// ---- CONFIG ----
+const SOUND_ENABLED = true;
+const MASTER_VOLUME = 0.6;
+
+// ---- SOUND CACHE ----
+const SoundEngine = {
+    cache: {},
+    lastPlayed: {},
+    
+    play(name, volume=1, cooldown=5) {
+        if (!SOUND_ENABLED) return;
+
+        const now = pixelTicks;
+
+        // global cooldown per sound
+        if (this.lastPlayed[name] && now - this.lastPlayed[name] < cooldown) {
+            return;
+        }
+
+        this.lastPlayed[name] = now;
+
+        if (!this.cache[name]) {
+            this.cache[name] = new Audio(name);
+        }
+
+        let s = this.cache[name].cloneNode();
+        s.volume = volume * MASTER_VOLUME;
+        s.play().catch(()=>{});
+    }
+};
+
+// ---- HELPERS ----
+function chance(n) {
+    return Math.random() < n;
+}
+
+// detect neighbors
+function touching(pixel, elementName) {
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            if (!dx && !dy) continue;
+            let p = getPixel(pixel.x + dx, pixel.y + dy);
+            if (p && p.element === elementName) return true;
+        }
+    }
+    return false;
+}
+
+// ==========================
+// 💧 WATER SPLASH DETECTION
+// ==========================
+
+let oldWaterTick = elements.water.tick;
+
+elements.water.tick = function(pixel) {
+    if (oldWaterTick) oldWaterTick(pixel);
+
+    if (pixel.lastY === undefined) pixel.lastY = pixel.y;
+
+    let velocity = pixel.y - pixel.lastY;
+    pixel.lastY = pixel.y;
+
+    if (velocity > 1.5 && touching(pixel, "water") && chance(0.08)) {
+        SoundEngine.play("mods/sounds/splash.ogg", 0.5, 3);
+    }
+};
+
+// ==========================
+// 🔥 GENERIC FIRE SOUND
+// ==========================
+
+runEveryTick(function() {
+    if (pixelTicks % 3 !== 0) return;
+
+    for (let i = 0; i < currentPixels.length; i += 5) {
+        let pixel = currentPixels[i];
+        if (!pixel) continue;
+
+        if (pixel.temp > 250 && chance(0.01)) {
+            SoundEngine.play("mods/sounds/fire.ogg", 0.3, 10);
+        }
+
+        if (pixel.temp > 900 && chance(0.02)) {
+            SoundEngine.play("mods/sounds/intense_fire.ogg", 0.6, 8);
+        }
+    }
+});
+
+// ==========================
+// ⚡ METAL FIRE (SPECIALIZED)
+// ==========================
+
+function addBurnSound(elem, sound, tempThreshold, volume=0.7) {
+    if (!elements[elem]) return;
+
+    let old = elements[elem].tick;
+
+    elements[elem].tick = function(pixel) {
+        if (old) old(pixel);
+
+        if (!pixel.soundCD) pixel.soundCD = 0;
+
+        if (pixel.soundCD <= 0 && pixel.temp > tempThreshold) {
+            if (chance(0.05)) {
+                SoundEngine.play(sound, volume, 5);
+                pixel.soundCD = 20;
+            }
+        }
+
+        pixel.soundCD--;
+    };
+}
+
+addBurnSound("sodium", "mods/sounds/sodium.ogg", 200);
+addBurnSound("potassium", "mods/sounds/potassium.ogg", 200);
+addBurnSound("magnesium", "mods/sounds/magnesium.ogg", 800);
+
+// ==========================
+// ♨️ BOILING / STEAM
+// ==========================
+
+let oldWaterState = elements.water.onChange;
+
+elements.water.onChange = function(pixel, change) {
+    if (oldWaterState) oldWaterState(pixel, change);
+
+    if (change === "steam") {
+        SoundEngine.play("mods/sounds/boil.ogg", 0.4, 10);
+    }
+};
+
+// ==========================
+// 💥 EXPLOSIONS
+// ==========================
+
+runEveryTick(function() {
+    if (pixelTicks % 2 !== 0) return;
+
+    for (let i = 0; i < currentPixels.length; i += 6) {
+        let pixel = currentPixels[i];
+        if (!pixel) continue;
+
+        if (pixel.element === "explosion" && chance(0.2)) {
+            SoundEngine.play("mods/sounds/explosion.ogg", 0.8, 3);
+        }
+    }
+});
